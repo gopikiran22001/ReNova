@@ -1,16 +1,23 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Recycle, Menu, X, User, LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
     const location = useLocation();
     const navigate = useNavigate();
+    const { user, logout } = useAuth();
     const [isOpen, setIsOpen] = React.useState(false);
 
-    const isCitizen = location.pathname.includes('/citizen');
-    const isCollector = location.pathname.includes('/collector');
-    const isAdmin = location.pathname.includes('/admin');
-    const isPublic = !isCitizen && !isCollector && !isAdmin;
+    const isCitizen = user?.role === 'citizen';
+    const isCollector = user?.role === 'collector';
+    const isAdmin = user?.role === 'admin';
+
+    const handleLogout = async (e) => {
+        e.preventDefault();
+        await logout();
+        navigate('/login');
+    };
 
     return (
         <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 backdrop-blur-lg bg-white/80">
@@ -58,7 +65,7 @@ export default function Navbar() {
 
                         <div className="h-6 w-px bg-gray-200 mx-2"></div>
 
-                        {isPublic ? (
+                        {!user ? (
                             <div className="flex items-center gap-3">
                                 <Link to="/login" className="text-gray-600 hover:text-primary-600 font-medium">Sign In</Link>
                                 <Link to="/register" className="btn btn-primary py-1.5 px-4 text-sm">Get Started</Link>
@@ -68,35 +75,13 @@ export default function Navbar() {
                                 <Link to="/profile" className="p-2 text-gray-500 hover:text-primary-600 hover:bg-gray-100 rounded-full transition-colors" title="Profile">
                                     <User className="h-5 w-5" />
                                 </Link>
-                                <Link to="/login" className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors" title="Log Out">
+                                <button onClick={handleLogout} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors" title="Log Out">
                                     <LogOut className="h-5 w-5" />
-                                </Link>
+                                </button>
                             </div>
                         )}
 
-                        <div className="hidden lg:flex items-center gap-2 ml-4 pl-4 border-l border-gray-200">
-                            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Dev Mode:</span>
-                            <div className="flex bg-gray-100 p-1 rounded-lg">
-                                <button
-                                    onClick={() => navigate('/citizen/dashboard')}
-                                    className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${isCitizen ? 'bg-white text-primary-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                                >
-                                    Citizen
-                                </button>
-                                <button
-                                    onClick={() => navigate('/collector/dashboard')}
-                                    className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${isCollector ? 'bg-white text-primary-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                                >
-                                    Collector
-                                </button>
-                                <button
-                                    onClick={() => navigate('/admin/dashboard')}
-                                    className={`px-3 py-1 rounded-md text-sm font-medium transition-all ${isAdmin ? 'bg-white text-primary-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                                >
-                                    Admin
-                                </button>
-                            </div>
-                        </div>
+
                     </div>
                 </div>
             </div>

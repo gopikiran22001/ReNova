@@ -1,29 +1,52 @@
 import React, { useState } from 'react';
 import { Camera, MapPin, Send } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
+import api from '../../api/axios';
 
 export default function ReportDump() {
     const { addToast } = useToast();
     const [image, setImage] = useState(null);
     const [loading, setLoading] = useState(false);
 
+    const [imageFile, setImageFile] = useState(null);
+    const [formData, setFormData] = useState({
+        location: '',
+        description: ''
+    });
+
     const handleImageChange = (e) => {
         if (e.target.files && e.target.files[0]) {
             setImage(URL.createObjectURL(e.target.files[0]));
+            setImageFile(e.target.files[0]);
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
-        // Simulate API call
-        setTimeout(() => {
-            setLoading(false);
+        try {
+            const data = new FormData();
+            data.append('address', formData.location);
+            data.append('description', formData.description);
+            if (imageFile) {
+                data.append('image', imageFile);
+            }
+
+            await api.post('/reports', data, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
             addToast('Report submitted successfully! Thank you for helping.', 'success');
             setImage(null);
-            e.target.reset();
-        }, 1500);
+            setImageFile(null);
+            setFormData({ location: '', description: '' });
+        } catch (error) {
+            addToast(error.response?.data?.message || 'Failed to submit report', 'error');
+        }
+        setLoading(false);
     };
 
     return (
@@ -44,6 +67,8 @@ export default function ReportDump() {
                                 placeholder="Enter address or landmark"
                                 className="input-field pl-10"
                                 required
+                                value={formData.location}
+                                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                             />
                             <button type="button" className="absolute right-2 top-2 text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 text-gray-600">
                                 Use Current Location
@@ -58,6 +83,8 @@ export default function ReportDump() {
                             className="input-field py-3"
                             placeholder="Describe the waste (e.g., construction debris, plastic bags...)"
                             required
+                            value={formData.description}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         ></textarea>
                     </div>
 

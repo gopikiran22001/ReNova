@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const pickupSchema = new mongoose.Schema({
     userId: {
@@ -20,6 +20,13 @@ const pickupSchema = new mongoose.Schema({
         type: Date,
         required: true
     },
+    location: {
+        address: String,
+        coordinates: {
+            lat: Number,
+            lng: Number
+        }
+    },
     imageUrl: {
         type: String
     },
@@ -38,4 +45,4 @@ const pickupSchema = new mongoose.Schema({
     }
 });
 
-export const PickupObj = mongoose.model('Pickup', pickupSchema);
+export default mongoose.model('Pickup', pickupSchema);

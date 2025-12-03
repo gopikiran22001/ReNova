@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const reportSchema = new mongoose.Schema({
     reporterId: {
@@ -30,4 +30,4 @@ const reportSchema = new mongoose.Schema({
     }
 });
 
-export const ReportObj = mongoose.model('Report', reportSchema);
+export default mongoose.model('Report', reportSchema);

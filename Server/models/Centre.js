@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const centreSchema = new mongoose.Schema({
     name: {
@@ -34,4 +34,4 @@ const centreSchema = new mongoose.Schema({
     }
 });
 
-export const CentreObj = mongoose.model('Centre', centreSchema);
+export default mongoose.model('Centre', centreSchema);

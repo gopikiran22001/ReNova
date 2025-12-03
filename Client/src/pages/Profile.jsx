@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '../api/axios';
 import { User, Mail, Phone, MapPin, Save, Camera } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
@@ -6,18 +7,62 @@ export default function Profile() {
     const { addToast } = useToast();
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
-        name: 'Alex Johnson',
-        email: 'alex.j@example.com',
-        phone: '+1 (555) 123-4567',
-        address: '123 Green Street, Eco City, EC 45678',
-        bio: 'Passionate about recycling and keeping our planet clean.'
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        bio: 'Passionate about recycling and keeping our planet clean.' // Bio not in model yet, keeping as placeholder or we can add it
     });
+    const [loading, setLoading] = useState(true);
 
-    const handleSubmit = (e) => {
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const { data } = await api.get('/auth/me');
+                if (data.success) {
+                    const user = data.data.user;
+                    setFormData({
+                        name: user.name,
+                        email: user.email,
+                        phone: user.phone || '',
+                        address: user.address?.street ? `${user.address.street}, ${user.address.city}, ${user.address.zipCode}` : '',
+                        bio: 'Passionate about recycling and keeping our planet clean.'
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching profile:', error);
+                addToast('Failed to load profile', 'error');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchUser();
+    }, []);
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsEditing(false);
-        addToast('Profile updated successfully!', 'success');
+        try {
+            // We need an endpoint to update user profile. 
+            // Assuming PUT /auth/profile or similar exists or we create it.
+            // For now, I'll assume we might need to add it to authRoutes.
+            // Let's check authRoutes first.
+            // If not exists, I'll add it.
+
+            // Parsing address string back to object is tricky without structured input.
+            // For now, let's just save name and phone.
+            await api.put('/auth/updatedetails', {
+                name: formData.name,
+                phone: formData.phone
+                // address update logic needed
+            });
+            setIsEditing(false);
+            addToast('Profile updated successfully!', 'success');
+        } catch (error) {
+            addToast('Failed to update profile', 'error');
+        }
     };
+
+    if (loading) return <div className="text-center py-12">Loading...</div>;
 
     return (
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

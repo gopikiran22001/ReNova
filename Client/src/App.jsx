@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import NotFound from './pages/NotFound';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Citizen Pages
 import CitizenDashboard from './pages/citizen/Dashboard';
@@ -39,30 +40,78 @@ function App() {
           <Route path="awareness" element={<Awareness />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
-          <Route path="profile" element={<Profile />} />
+          <Route path="profile" element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
 
           {/* Citizen Routes */}
           <Route path="citizen">
-            <Route path="dashboard" element={<CitizenDashboard />} />
-            <Route path="request-pickup" element={<RequestPickup />} />
-            <Route path="pickups" element={<Pickups />} />
-            <Route path="report-dump" element={<ReportDump />} />
+            <Route path="dashboard" element={
+              <ProtectedRoute roles={['citizen', 'admin']}>
+                <CitizenDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="request-pickup" element={
+              <ProtectedRoute roles={['citizen', 'admin']}>
+                <RequestPickup />
+              </ProtectedRoute>
+            } />
+            <Route path="pickups" element={
+              <ProtectedRoute roles={['citizen', 'admin']}>
+                <Pickups />
+              </ProtectedRoute>
+            } />
+            <Route path="report-dump" element={
+              <ProtectedRoute roles={['citizen', 'admin']}>
+                <ReportDump />
+              </ProtectedRoute>
+            } />
             <Route path="centres" element={<Centres />} />
-            <Route path="points" element={<Points />} />
+            <Route path="points" element={
+              <ProtectedRoute roles={['citizen', 'admin']}>
+                <Points />
+              </ProtectedRoute>
+            } />
           </Route>
 
           {/* Collector Routes */}
           <Route path="collector">
-            <Route path="dashboard" element={<CollectorDashboard />} />
-            <Route path="route/:id" element={<CollectorRoute />} />
+            <Route path="dashboard" element={
+              <ProtectedRoute roles={['collector', 'admin']}>
+                <CollectorDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="route/:id" element={
+              <ProtectedRoute roles={['collector', 'admin']}>
+                <CollectorRoute />
+              </ProtectedRoute>
+            } />
           </Route>
 
           {/* Admin Routes */}
           <Route path="admin">
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="pickups" element={<AdminPickups />} />
-            <Route path="centres" element={<AdminCentres />} />
-            <Route path="reports" element={<AdminReports />} />
+            <Route path="dashboard" element={
+              <ProtectedRoute roles={['admin']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="pickups" element={
+              <ProtectedRoute roles={['admin']}>
+                <AdminPickups />
+              </ProtectedRoute>
+            } />
+            <Route path="centres" element={
+              <ProtectedRoute roles={['admin']}>
+                <AdminCentres />
+              </ProtectedRoute>
+            } />
+            <Route path="reports" element={
+              <ProtectedRoute roles={['admin']}>
+                <AdminReports />
+              </ProtectedRoute>
+            } />
           </Route>
 
           {/* 404 Route */}

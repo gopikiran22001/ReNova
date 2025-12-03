@@ -1,9 +1,65 @@
-import React from 'react';
-import { useData } from '../../context/DataContext';
+import React, { useEffect, useState } from 'react';
+import api from '../../api/axios';
 import { Users, Truck, AlertTriangle, BarChart3 } from 'lucide-react';
 
 export default function AdminDashboard() {
-    const { stats } = useData();
+    const [stats, setStats] = useState({
+        dailyPickups: 0,
+        totalWaste: '0 kg',
+        pendingReports: 0,
+        activeCollectors: 0
+    });
+    const [recentActivity, setRecentActivity] = useState([]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                // Fetch pickups
+                const { data: pickupsResponse } = await api.get('/pickups');
+                const pickups = pickupsResponse.success ? pickupsResponse.data.items : [];
+                
+                const today = new Date().toISOString().split('T')[0];
+                const dailyPickups = pickups.filter(p => {
+                    return p.date && p.date.startsWith(today);
+                }).length;
+
+                // Fetch reports
+                const { data: reportsResponse } = await api.get('/reports');
+                const reports = reportsResponse.success ? reportsResponse.data.items : [];
+                const pendingReports = reports.filter(r => r.status === 'reported').length;
+
+                // Fetch users
+                const { data: usersResponse } = await api.get('/auth/users');
+                const users = usersResponse.success ? usersResponse.data.items : [];
+                const activeCollectors = users.filter(u => u.role === 'collector').length;
+
+                setStats({
+                    dailyPickups,
+                    totalWaste: `${pickups.filter(p => p.status === 'completed').length * 5} kg`,
+                    pendingReports,
+                    activeCollectors
+                });
+
+                // Recent activity
+                const activity = [...pickups, ...reports]
+                    .sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date))
+                    .slice(0, 5);
+                setRecentActivity(activity);
+
+            } catch (error) {
+                console.error('Error fetching admin stats:', error);
+                setStats({
+                    dailyPickups: 0,
+                    totalWaste: '0 kg',
+                    pendingReports: 0,
+                    activeCollectors: 0
+                });
+                setRecentActivity([]);
+            }
+        };
+
+        fetchData();
+    }, []);
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -17,7 +73,7 @@ export default function AdminDashboard() {
                     </div>
                     <p className="text-3xl font-bold text-gray-900">{stats.dailyPickups}</p>
                     <p className="text-green-600 text-sm mt-2 flex items-center gap-1">
-                        <span className="font-bold">↑ 12%</span> vs yesterday
+                        <span className="font-bold">Today</span>
                     </p>
                 </div>
 
@@ -28,7 +84,7 @@ export default function AdminDashboard() {
                     </div>
                     <p className="text-3xl font-bold text-gray-900">{stats.totalWaste}</p>
                     <p className="text-green-600 text-sm mt-2 flex items-center gap-1">
-                        <span className="font-bold">↑ 5%</span> vs last week
+                        <span className="font-bold">Estimated</span>
                     </p>
                 </div>
 
@@ -50,7 +106,7 @@ export default function AdminDashboard() {
                     </div>
                     <p className="text-3xl font-bold text-gray-900">{stats.activeCollectors}</p>
                     <p className="text-gray-500 text-sm mt-2">
-                        All systems operational
+                        System Status: OK
                     </p>
                 </div>
             </div>
@@ -59,15 +115,21 @@ export default function AdminDashboard() {
                 <div className="card p-6">
                     <h3 className="font-bold text-gray-900 mb-4">Recent Activity</h3>
                     <div className="space-y-4">
-                        {[1, 2, 3, 4].map((i) => (
-                            <div key={i} className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                                <div className="w-2 h-2 rounded-full bg-primary-500"></div>
-                                <div className="flex-1">
-                                    <p className="text-sm font-medium text-gray-900">New pickup request from Sector 4</p>
-                                    <p className="text-xs text-gray-500">2 minutes ago</p>
+                        <div className="space-y-4">
+                            {recentActivity.map((item, i) => (
+                                <div key={i} className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                                    <div className="w-2 h-2 rounded-full bg-primary-500"></div>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium text-gray-900">
+                                            {item.wasteType ? `New pickup request: ${item.wasteType}` : `New report: ${item.location?.address || 'Location not available'}`}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                            {new Date(item.createdAt || item.date).toLocaleString()}
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
 

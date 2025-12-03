@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useData } from '../../context/DataContext';
 import { useToast } from '../../context/ToastContext';
-import { Upload, Calendar, Weight, Trash2 } from 'lucide-react';
+import api from '../../api/axios';
+import { Upload, Calendar, Weight, Trash2, MapPin } from 'lucide-react';
 import ListboxSelect from '../../components/ListboxSelect';
 import DatePicker from '../../components/DatePicker';
 
@@ -11,7 +11,6 @@ const WEIGHT_RANGES = ['Less than 1 kg', '1 - 5 kg', '5 - 10 kg', 'More than 10 
 
 export default function RequestPickup() {
     const navigate = useNavigate();
-    const { addPickupRequest } = useData();
     const { addToast } = useToast();
 
     const [image, setImage] = useState(null);
@@ -19,29 +18,49 @@ export default function RequestPickup() {
         type: 'Dry Waste',
         weight: 'Less than 1 kg',
         date: '',
+        location: ''
     });
+
+    const [imageFile, setImageFile] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     const handleImageChange = (e) => {
         if (e.target.files && e.target.files[0]) {
             setImage(URL.createObjectURL(e.target.files[0]));
+            setImageFile(e.target.files[0]);
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.date) {
             addToast('Please select a pickup date', 'error');
             return;
         }
 
-        addPickupRequest({
-            type: formData.type,
-            weight: formData.weight,
-            date: formData.date
-        });
+        setLoading(true);
+        try {
+            const data = new FormData();
+            data.append('wasteType', formData.type);
+            data.append('weight', formData.weight);
+            data.append('date', formData.date);
+            data.append('address', formData.location);
+            if (imageFile) {
+                data.append('image', imageFile);
+            }
 
-        addToast('Pickup scheduled successfully!', 'success');
-        navigate('/citizen/pickups');
+            await api.post('/pickups', data, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            addToast('Pickup scheduled successfully!', 'success');
+            navigate('/citizen/pickups');
+        } catch (error) {
+            addToast(error.response?.data?.message || 'Failed to schedule pickup', 'error');
+        }
+        setLoading(false);
     };
 
     return (
@@ -80,6 +99,23 @@ export default function RequestPickup() {
                             min={new Date()}
                             leftIcon={<Calendar className="h-5 w-5 text-gray-400" />}
                         />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Location</label>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <MapPin className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <input
+                                type="text"
+                                required
+                                className="input pl-10 w-full"
+                                placeholder="Enter pickup address"
+                                value={formData.location}
+                                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                            />
+                        </div>
                     </div>
 
                     <div>

@@ -1,19 +1,62 @@
-import React from 'react';
-import { useData } from '../../context/DataContext';
+import React, { useEffect, useState } from 'react';
+import api from '../../api/axios';
 import { useToast } from '../../context/ToastContext';
 import { Award, TrendingUp, Gift } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Points() {
-    const { userPoints, totalPoints, redeemPoints } = useData();
+    const { user } = useAuth();
     const { addToast } = useToast();
+    const [transactions, setTransactions] = useState([]);
+    const [totalPoints, setTotalPoints] = useState(0);
+    const [loading, setLoading] = useState(true);
 
-    const handleRedeem = () => {
-        if (redeemPoints(500)) {
-            addToast('Redeemed 500 points successfully!', 'success');
-        } else {
-            addToast('Insufficient points to redeem reward', 'error');
+    const fetchData = async () => {
+        try {
+            const { data: userResponse } = await api.get('/auth/me');
+            if (userResponse.success) {
+                setTotalPoints(userResponse.data.user.points || 0);
+            }
+
+            const { data: transResponse } = await api.get('/transactions');
+            if (transResponse.success) {
+                setTransactions(transResponse.data.items || []);
+            }
+        } catch (error) {
+            console.error('Error fetching points data:', error);
+            setTotalPoints(user?.points || 0);
+            setTransactions([]);
+        } finally {
+            setLoading(false);
         }
     };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const handleRedeem = async () => {
+        if (totalPoints < 500) {
+            addToast('Insufficient points to redeem reward', 'error');
+            return;
+        }
+
+        try {
+            await api.post('/transactions', {
+                amount: 500,
+                type: 'redeemed',
+                description: 'Reward Redemption'
+            });
+            addToast('Redeemed 500 points successfully!', 'success');
+            fetchData(); // Refresh data
+        } catch (error) {
+            addToast(error.response?.data?.message || 'Redemption failed', 'error');
+        }
+    };
+
+    if (loading) {
+        return <div className="text-center py-12">Loading...</div>;
+    }
 
     return (
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -37,22 +80,26 @@ export default function Points() {
 
             <h2 className="text-xl font-bold text-gray-900 mb-4">Points History</h2>
             <div className="card divide-y divide-gray-100">
-                {userPoints.map((item) => (
-                    <div key={item.id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                        <div className="flex items-center gap-4">
-                            <div className={`p-2 rounded-lg ${item.points > 0 ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}`}>
-                                <Award className="h-5 w-5" />
+                {transactions.length === 0 ? (
+                    <div className="p-6 text-center text-gray-500">No transactions yet.</div>
+                ) : (
+                    transactions.map((item) => (
+                        <div key={item._id} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                            <div className="flex items-center gap-4">
+                                <div className={`p-2 rounded-lg ${item.type === 'earned' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}`}>
+                                    <Award className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-medium text-gray-900">{item.description}</h3>
+                                    <p className="text-sm text-gray-500">{new Date(item.date).toLocaleDateString()}</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="font-medium text-gray-900">{item.action}</h3>
-                                <p className="text-sm text-gray-500">{item.date}</p>
-                            </div>
+                            <span className={`font-bold ${item.type === 'earned' ? 'text-green-600' : 'text-orange-600'}`}>
+                                {item.type === 'earned' ? '+' : '-'}{item.amount} pts
+                            </span>
                         </div>
-                        <span className={`font-bold ${item.points > 0 ? 'text-green-600' : 'text-orange-600'}`}>
-                            {item.points > 0 ? '+' : ''}{item.points} pts
-                        </span>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
         </div>
     );

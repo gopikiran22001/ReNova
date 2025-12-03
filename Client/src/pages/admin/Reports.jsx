@@ -1,7 +1,47 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import api from '../../api/axios';
 import { Download, FileText, PieChart, BarChart3 } from 'lucide-react';
 
 export default function AdminReports() {
+    const [stats, setStats] = useState({
+        wasteByType: {},
+        pickupsByStatus: {}
+    });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const { data: pickupsResponse } = await api.get('/pickups');
+                const pickups = pickupsResponse.success ? pickupsResponse.data.items : [];
+
+                // Calculate waste by type
+                const wasteByType = pickups.reduce((acc, p) => {
+                    acc[p.wasteType] = (acc[p.wasteType] || 0) + 1;
+                    return acc;
+                }, {});
+
+                // Calculate pickups by status
+                const pickupsByStatus = pickups.reduce((acc, p) => {
+                    acc[p.status] = (acc[p.status] || 0) + 1;
+                    return acc;
+                }, {});
+
+                setStats({ wasteByType, pickupsByStatus });
+            } catch (error) {
+                console.error('Error fetching report data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    if (loading) {
+        return <div className="text-center py-12">Loading...</div>;
+    }
+
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex justify-between items-center mb-8">
@@ -14,27 +54,41 @@ export default function AdminReports() {
             <div className="grid md:grid-cols-2 gap-8">
                 <div className="card p-6">
                     <div className="flex justify-between items-center mb-6">
-                        <h3 className="font-bold text-gray-900">Monthly Waste Analysis</h3>
-                        <button className="text-sm text-primary-600 hover:underline">Download CSV</button>
+                        <h3 className="font-bold text-gray-900">Waste Type Analysis</h3>
                     </div>
-                    <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center border border-dashed border-gray-200">
-                        <div className="text-center text-gray-400">
-                            <PieChart className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                            <p>Chart Placeholder</p>
-                        </div>
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        {Object.keys(stats.wasteByType).length > 0 ? (
+                            <ul className="space-y-2">
+                                {Object.entries(stats.wasteByType).map(([type, count]) => (
+                                    <li key={type} className="flex justify-between items-center">
+                                        <span className="text-gray-700 capitalize">{type}</span>
+                                        <span className="font-bold text-gray-900">{count} pickups</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-center text-gray-400">No data available</p>
+                        )}
                     </div>
                 </div>
 
                 <div className="card p-6">
                     <div className="flex justify-between items-center mb-6">
-                        <h3 className="font-bold text-gray-900">Collector Performance</h3>
-                        <button className="text-sm text-primary-600 hover:underline">Download PDF</button>
+                        <h3 className="font-bold text-gray-900">Pickup Status Overview</h3>
                     </div>
-                    <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center border border-dashed border-gray-200">
-                        <div className="text-center text-gray-400">
-                            <BarChart3 className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                            <p>Chart Placeholder</p>
-                        </div>
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        {Object.keys(stats.pickupsByStatus).length > 0 ? (
+                            <ul className="space-y-2">
+                                {Object.entries(stats.pickupsByStatus).map(([status, count]) => (
+                                    <li key={status} className="flex justify-between items-center">
+                                        <span className="text-gray-700 capitalize">{status}</span>
+                                        <span className="font-bold text-gray-900">{count}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-center text-gray-400">No data available</p>
+                        )}
                     </div>
                 </div>
             </div>

@@ -1,9 +1,37 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import api from '../../api/axios';
 import { ArrowLeft, MapPin, Navigation } from 'lucide-react';
 
 export default function Route() {
     const { id } = useParams();
+    const [pickup, setPickup] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchPickup = async () => {
+            try {
+                const { data } = await api.get(`/pickups/${id}`);
+                if (data.success) {
+                    setPickup(data.data.item);
+                }
+            } catch (error) {
+                console.error('Error fetching pickup:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPickup();
+    }, [id]);
+
+    if (loading) {
+        return <div className="text-center py-12">Loading...</div>;
+    }
+
+    if (!pickup) {
+        return <div className="text-center py-12">Pickup not found</div>;
+    }
 
     return (
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -12,36 +40,25 @@ export default function Route() {
             </Link>
 
             <div className="card p-6 mb-6">
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">Navigation to Job #{id}</h1>
-                <p className="text-gray-600">Estimated time: 12 mins</p>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">Navigation to Job</h1>
+                <p className="text-gray-600">Waste Type: {pickup.wasteType}</p>
             </div>
 
             <div className="relative border-l-2 border-gray-200 ml-4 space-y-8 pb-8">
                 <div className="relative pl-8">
                     <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-primary-500 ring-4 ring-white"></div>
                     <h3 className="font-bold text-gray-900">Start: Current Location</h3>
-                    <p className="text-gray-500 text-sm mt-1">Head north on Main Street</p>
-                </div>
-
-                <div className="relative pl-8">
-                    <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-gray-300 ring-4 ring-white"></div>
-                    <h3 className="font-medium text-gray-900">Turn Right</h3>
-                    <p className="text-gray-500 text-sm mt-1">onto Oak Avenue (2.3 km)</p>
-                </div>
-
-                <div className="relative pl-8">
-                    <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-gray-300 ring-4 ring-white"></div>
-                    <h3 className="font-medium text-gray-900">Turn Left</h3>
-                    <p className="text-gray-500 text-sm mt-1">onto Palm Grove (500 m)</p>
                 </div>
 
                 <div className="relative pl-8">
                     <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-red-500 ring-4 ring-white"></div>
                     <h3 className="font-bold text-gray-900">Destination</h3>
-                    <p className="text-gray-500 text-sm mt-1">12 Palm Grove, Sector 4</p>
+                    <p className="text-gray-500 text-sm mt-1">
+                        {pickup.location?.address || "Address not available"}
+                    </p>
                     <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
-                        <p className="text-sm font-medium text-gray-700">Note for driver:</p>
-                        <p className="text-sm text-gray-500">Gate code is 1234. Call upon arrival.</p>
+                        <p className="text-sm font-medium text-gray-700">Note:</p>
+                        <p className="text-sm text-gray-500">Weight: {pickup.weight}</p>
                     </div>
                 </div>
             </div>

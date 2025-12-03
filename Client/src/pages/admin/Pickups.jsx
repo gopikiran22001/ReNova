@@ -1,21 +1,47 @@
-import React from 'react';
-import { useData } from '../../context/DataContext';
+import React, { useEffect, useState } from 'react';
+import api from '../../api/axios';
 import { useToast } from '../../context/ToastContext';
 import { Check, UserPlus } from 'lucide-react';
 
 export default function AdminPickups() {
-    const { adminPickupsList, updatePickupStatus } = useData();
     const { addToast } = useToast();
+    const [pickups, setPickups] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const handleAction = (id, action) => {
-        if (action === 'approve') {
-            updatePickupStatus(id, 'Scheduled');
-            addToast('Pickup request approved', 'success');
-        } else if (action === 'assign') {
-            updatePickupStatus(id, 'Assigned');
-            addToast('Collector assigned to pickup', 'success');
+    const fetchPickups = async () => {
+        try {
+            const { data } = await api.get('/pickups');
+            if (data.success) {
+                setPickups(data.data.items || []);
+            }
+        } catch (error) {
+            console.error('Error fetching pickups:', error);
+        } finally {
+            setLoading(false);
         }
     };
+
+    useEffect(() => {
+        fetchPickups();
+    }, []);
+
+    const handleAction = async (id, action) => {
+        try {
+            let status = 'pending';
+            if (action === 'approve') status = 'assigned'; // Assuming approve means assigning to a collector (or self for now)
+            else if (action === 'assign') status = 'assigned';
+
+            await api.put(`/pickups/${id}/status`, { status });
+            addToast(`Pickup ${status} successfully`, 'success');
+            fetchPickups();
+        } catch (error) {
+            addToast('Failed to update pickup', 'error');
+        }
+    };
+
+    if (loading) {
+        return <div className="text-center py-12">Loading...</div>;
+    }
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -27,41 +53,31 @@ export default function AdminPickups() {
                         <thead className="bg-gray-50 text-gray-900 font-medium border-b border-gray-100">
                             <tr>
                                 <th className="px-6 py-4">ID</th>
-                                <th className="px-6 py-4">User</th>
-                                <th className="px-6 py-4">Type</th>
+                                <th className="px-6 py-4">Waste Type</th>
                                 <th className="px-6 py-4">Date</th>
                                 <th className="px-6 py-4">Status</th>
                                 <th className="px-6 py-4">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {adminPickupsList.map((pickup) => (
-                                <tr key={pickup.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4">#{pickup.id}</td>
-                                    <td className="px-6 py-4 font-medium text-gray-900">{pickup.user}</td>
-                                    <td className="px-6 py-4">{pickup.type}</td>
-                                    <td className="px-6 py-4">{pickup.date}</td>
+                            {pickups.map((pickup) => (
+                                <tr key={pickup._id} className="hover:bg-gray-50 transition-colors">
+                                    <td className="px-6 py-4">#{pickup._id.slice(-6)}</td>
+                                    <td className="px-6 py-4">{pickup.wasteType}</td>
+                                    <td className="px-6 py-4">{new Date(pickup.date).toLocaleDateString()}</td>
                                     <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded text-xs font-medium ${pickup.status === 'Completed' ? 'bg-green-100 text-green-700' :
-                                                pickup.status === 'Assigned' ? 'bg-blue-100 text-blue-700' :
-                                                    pickup.status === 'Scheduled' ? 'bg-blue-100 text-blue-700' :
-                                                        'bg-yellow-100 text-yellow-700'
+                                        <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${pickup.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                            pickup.status === 'assigned' ? 'bg-blue-100 text-blue-700' :
+                                                'bg-yellow-100 text-yellow-700'
                                             }`}>
                                             {pickup.status}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 flex gap-2">
-                                        {pickup.status === 'Pending' && (
+                                        {pickup.status === 'pending' && (
                                             <>
                                                 <button
-                                                    onClick={() => handleAction(pickup.id, 'approve')}
-                                                    className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors"
-                                                    title="Approve"
-                                                >
-                                                    <Check className="h-4 w-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleAction(pickup.id, 'assign')}
+                                                    onClick={() => handleAction(pickup._id, 'assign')}
                                                     className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                                     title="Assign Collector"
                                                 >

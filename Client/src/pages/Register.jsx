@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Recycle, Mail, Lock, User, ArrowRight } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 import ListboxSelect from '../components/ListboxSelect';
 
 export default function Register() {
@@ -14,11 +15,19 @@ export default function Register() {
         role: 'citizen'
     });
 
-    const handleSubmit = (e) => {
+    const { register } = useAuth();
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Simulate registration
-        addToast('Account created successfully!', 'success');
-        navigate('/login');
+        setLoading(true);
+        const result = await register(formData);
+        if (result.success) {
+            addToast('Account created successfully!', 'success');
+        } else {
+            addToast(result.message, 'error');
+        }
+        setLoading(false);
     };
 
     return (

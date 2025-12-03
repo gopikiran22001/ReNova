@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Recycle, Mail, Lock, ArrowRight } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
     const navigate = useNavigate();
@@ -11,11 +12,19 @@ export default function Login() {
         password: ''
     });
 
-    const handleSubmit = (e) => {
+    const { login } = useAuth();
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Simulate login
-        addToast('Successfully logged in!', 'success');
-        navigate('/citizen/dashboard');
+        setLoading(true);
+        const result = await login(formData.email, formData.password);
+        if (result.success) {
+            addToast('Successfully logged in!', 'success');
+        } else {
+            addToast(result.message, 'error');
+        }
+        setLoading(false);
     };
 
     return (
