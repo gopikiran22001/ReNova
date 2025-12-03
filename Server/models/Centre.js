@@ -34,4 +34,4 @@ const centreSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('Centre', centreSchema);
+export const CentreObj = mongoose.model('Centre', centreSchema);

@@ -38,4 +38,4 @@ const pickupSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('Pickup', pickupSchema);
+export const PickupObj = mongoose.model('Pickup', pickupSchema);
