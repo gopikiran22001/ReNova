@@ -53,6 +53,7 @@ export default function AdminPickups() {
                         <thead className="bg-gray-50 text-gray-900 font-medium border-b border-gray-100">
                             <tr>
                                 <th className="px-6 py-4">ID</th>
+                                <th className="px-6 py-4">Image</th>
                                 <th className="px-6 py-4">Waste Type</th>
                                 <th className="px-6 py-4">Date</th>
                                 <th className="px-6 py-4">Status</th>
@@ -63,6 +64,13 @@ export default function AdminPickups() {
                             {pickups.map((pickup) => (
                                 <tr key={pickup._id} className="hover:bg-gray-50 transition-colors">
                                     <td className="px-6 py-4">#{pickup._id.slice(-6)}</td>
+                                    <td className="px-6 py-4">
+                                        {pickup.imageUrl ? (
+                                            <img src={pickup.imageUrl} alt="Pickup" className="h-10 w-10 object-cover rounded border border-gray-200" />
+                                        ) : (
+                                            <span className="text-gray-400 text-xs">No img</span>
+                                        )}
+                                    </td>
                                     <td className="px-6 py-4">{pickup.wasteType}</td>
                                     <td className="px-6 py-4">{new Date(pickup.date).toLocaleDateString()}</td>
                                     <td className="px-6 py-4">

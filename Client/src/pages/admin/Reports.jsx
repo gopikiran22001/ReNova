@@ -7,6 +7,7 @@ export default function AdminReports() {
         wasteByType: {},
         pickupsByStatus: {}
     });
+    const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -28,6 +29,13 @@ export default function AdminReports() {
                 }, {});
 
                 setStats({ wasteByType, pickupsByStatus });
+
+                // Fetch reports
+                const { data: reportsResponse } = await api.get('/reports');
+                if (reportsResponse.success) {
+                    setReports(reportsResponse.data.reports || []);
+                }
+
             } catch (error) {
                 console.error('Error fetching report data:', error);
             } finally {
@@ -93,7 +101,48 @@ export default function AdminReports() {
                 </div>
             </div>
 
-            <h2 className="text-lg font-bold text-gray-900 mt-8 mb-4">Available Reports</h2>
+            <h2 className="text-lg font-bold text-gray-900 mt-8 mb-4">Recent Reports</h2>
+            <div className="card overflow-hidden mb-8">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm text-gray-600">
+                        <thead className="bg-gray-50 text-gray-900 font-medium border-b border-gray-100">
+                            <tr>
+                                <th className="px-6 py-4">Image</th>
+                                <th className="px-6 py-4">Location</th>
+                                <th className="px-6 py-4">Description</th>
+                                <th className="px-6 py-4">Status</th>
+                                <th className="px-6 py-4">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {reports.map((report) => (
+                                <tr key={report._id} className="hover:bg-gray-50 transition-colors">
+                                    <td className="px-6 py-4">
+                                        {report.imageUrl ? (
+                                            <img src={report.imageUrl} alt="Report" className="h-10 w-10 object-cover rounded border border-gray-200" />
+                                        ) : (
+                                            <span className="text-gray-400 text-xs">No img</span>
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-4">{report.location?.address}</td>
+                                    <td className="px-6 py-4 max-w-xs truncate" title={report.description}>{report.description}</td>
+                                    <td className="px-6 py-4">
+                                        <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${report.status === 'resolved' ? 'bg-green-100 text-green-700' :
+                                                report.status === 'investigating' ? 'bg-blue-100 text-blue-700' :
+                                                    'bg-yellow-100 text-yellow-700'
+                                            }`}>
+                                            {report.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4">{new Date(report.createdAt).toLocaleDateString()}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h2 className="text-lg font-bold text-gray-900 mb-4">Available Reports (Download)</h2>
             <div className="grid md:grid-cols-3 gap-4">
                 {['Daily Pickup Log', 'User Activity Report', 'Centre Capacity History', 'Illegal Dumping Heatmap', 'Financial Summary'].map((report, i) => (
                     <div key={i} className="card p-4 flex items-center justify-between hover:bg-gray-50 cursor-pointer transition-colors group">
@@ -110,5 +159,3 @@ export default function AdminReports() {
         </div>
     );
 }
-
-

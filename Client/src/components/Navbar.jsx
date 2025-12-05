@@ -25,8 +25,8 @@ export default function Navbar() {
             <Link
                 to={to}
                 className={`text-sm font-medium transition-colors ${isActive
-                        ? 'text-primary-600 font-semibold'
-                        : 'text-gray-600 hover:text-primary-600'
+                    ? 'text-primary-600 font-semibold'
+                    : 'text-gray-600 hover:text-primary-600'
                     }`}
             >
                 {children}
@@ -58,6 +58,7 @@ export default function Navbar() {
                                 <NavLink to="/citizen/dashboard">Dashboard</NavLink>
                                 <NavLink to="/citizen/request-pickup">Request Pickup</NavLink>
                                 <NavLink to="/citizen/pickups">My Pickups</NavLink>
+                                <NavLink to="/citizen/report-dump">Report Dump</NavLink>
                                 <NavLink to="/citizen/centres">Centres</NavLink>
                                 <NavLink to="/citizen/points">Points</NavLink>
                             </>
@@ -90,8 +91,8 @@ export default function Navbar() {
                                 <Link
                                     to="/profile"
                                     className={`p-2 rounded-full transition-colors ${location.pathname === '/profile'
-                                            ? 'text-primary-600 bg-primary-50'
-                                            : 'text-gray-500 hover:text-primary-600 hover:bg-gray-100'
+                                        ? 'text-primary-600 bg-primary-50'
+                                        : 'text-gray-500 hover:text-primary-600 hover:bg-gray-100'
                                         }`}
                                     title="Profile"
                                 >

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../api/axios';
 import { useToast } from '../../context/ToastContext';
-import { Edit2, Save } from 'lucide-react';
+import { Edit2, Save, Plus, X } from 'lucide-react';
 
 export default function AdminCentres() {
     const { addToast } = useToast();
@@ -9,6 +9,19 @@ export default function AdminCentres() {
     const [loading, setLoading] = useState(true);
     const [editingId, setEditingId] = useState(null);
     const [tempPercentage, setTempPercentage] = useState('');
+
+    // Create Modal State
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [newCentre, setNewCentre] = useState({
+        name: '',
+        address: '',
+        capacity: '',
+        acceptedTypes: [],
+        openTime: '09:00',
+        closeTime: '18:00'
+    });
+
+    const WASTE_TYPES = ['Dry Waste', 'Wet Waste', 'E-Waste', 'Plastic', 'Glass'];
 
     const fetchCentres = async () => {
         try {
@@ -45,13 +58,67 @@ export default function AdminCentres() {
         }
     };
 
+    const handleCreateSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const payload = {
+                name: newCentre.name,
+                location: {
+                    address: newCentre.address
+                },
+                capacity: parseInt(newCentre.capacity),
+                acceptedTypes: newCentre.acceptedTypes,
+                openingHours: {
+                    open: newCentre.openTime,
+                    close: newCentre.closeTime
+                }
+            };
+
+            const response = await api.post('/centres', payload);
+            if (response.data.success) {
+                addToast('Centre created successfully', 'success');
+                setShowCreateModal(false);
+                setNewCentre({
+                    name: '',
+                    address: '',
+                    capacity: '',
+                    acceptedTypes: [],
+                    openTime: '09:00',
+                    closeTime: '18:00'
+                });
+                fetchCentres();
+            }
+        } catch (error) {
+            console.error(error);
+            addToast(error.response?.data?.message || 'Failed to create centre', 'error');
+        }
+    };
+
+    const toggleWasteType = (type) => {
+        setNewCentre(prev => {
+            if (prev.acceptedTypes.includes(type)) {
+                return { ...prev, acceptedTypes: prev.acceptedTypes.filter(t => t !== type) };
+            } else {
+                return { ...prev, acceptedTypes: [...prev.acceptedTypes, type] };
+            }
+        });
+    };
+
     if (loading) {
         return <div className="text-center py-12">Loading...</div>;
     }
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">Centre Management</h1>
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Centre Management</h1>
+                <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="btn btn-primary flex items-center gap-2"
+                >
+                    <Plus className="h-4 w-4" /> Add Centre
+                </button>
+            </div>
 
             <div className="card overflow-hidden">
                 <table className="w-full text-left text-sm text-gray-600">
@@ -122,6 +189,124 @@ export default function AdminCentres() {
                     </tbody>
                 </table>
             </div>
+
+            {/* Create Centre Modal */}
+            {showCreateModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50 backdrop-blur-sm">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="flex justify-between items-center p-6 border-b border-gray-100">
+                            <h3 className="text-xl font-bold text-gray-900">Add New Recycling Centre</h3>
+                            <button
+                                onClick={() => setShowCreateModal(false)}
+                                className="text-gray-400 hover:text-gray-500"
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleCreateSubmit} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Centre Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="input-field"
+                                    placeholder="e.g. Downtown Recycling Hub"
+                                    value={newCentre.name}
+                                    onChange={(e) => setNewCentre({ ...newCentre, name: e.target.value })}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                <input
+                                    type="text"
+                                    required
+                                    className="input-field"
+                                    placeholder="Full address"
+                                    value={newCentre.address}
+                                    onChange={(e) => setNewCentre({ ...newCentre, address: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Capacity (kg)</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        className="input-field"
+                                        placeholder="1000"
+                                        value={newCentre.capacity}
+                                        onChange={(e) => setNewCentre({ ...newCentre, capacity: e.target.value })}
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Open</label>
+                                        <input
+                                            type="time"
+                                            required
+                                            className="input-field"
+                                            value={newCentre.openTime}
+                                            onChange={(e) => setNewCentre({ ...newCentre, openTime: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Close</label>
+                                        <input
+                                            type="time"
+                                            required
+                                            className="input-field"
+                                            value={newCentre.closeTime}
+                                            onChange={(e) => setNewCentre({ ...newCentre, closeTime: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Accepted Waste Types</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {WASTE_TYPES.map(type => (
+                                        <button
+                                            key={type}
+                                            type="button"
+                                            onClick={() => toggleWasteType(type)}
+                                            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${newCentre.acceptedTypes.includes(type)
+                                                    ? 'bg-primary-600 text-white'
+                                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                }`}
+                                        >
+                                            {type}
+                                        </button>
+                                    ))}
+                                </div>
+                                {newCentre.acceptedTypes.length === 0 && (
+                                    <p className="text-xs text-red-500 mt-1">Please select at least one type</p>
+                                )}
+                            </div>
+
+                            <div className="pt-4 flex justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCreateModal(false)}
+                                    className="btn bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={newCentre.acceptedTypes.length === 0}
+                                    className="btn btn-primary"
+                                >
+                                    Create Centre
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

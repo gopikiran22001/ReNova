@@ -5,13 +5,12 @@ import { protect } from '../middleware/authMiddleware.js';
 import upload from '../config/cloudinary.js';
 
 const router = express.Router();
-
 // @desc    Create new pickup
 // @route   POST /api/pickups
 // @access  Private
 router.post('/', protect, upload.single('image'), async (req, res) => {
     try {
-        const { wasteType, weight, date, address } = req.body;
+        const { wasteType, weight, date, address, latitude, longitude } = req.body;
         const imageUrl = req.file ? req.file.path : null;
 
         if (!wasteType || !weight || !date || !address) {
@@ -27,7 +26,11 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
             weight,
             date,
             location: {
-                address: address
+                address: address,
+                coordinates: {
+                    lat: latitude,
+                    lng: longitude
+                }
             },
             imageUrl
         });

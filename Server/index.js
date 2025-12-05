@@ -13,16 +13,11 @@ import cookieParser from 'cookie-parser';
 // Load env vars
 dotenv.config();
 
-// Connect to database
-connectDB();
-
 const app = express();
 
 // CORS middleware
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production'
-        ? process.env.CLIENT_URL
-        : 'http://localhost:5173',
+    origin: 'http://localhost:5173',
     credentials: true
 }));
 
@@ -42,27 +37,17 @@ app.use('/centres', centreRoutes);
 app.use('/reports', reportRoutes);
 app.use('/transactions', transactionRoutes);
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(err.status || 500).json({
-        success: false,
-        message: err.message || 'Internal Server Error',
-        ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
-    });
-});
+const PORT = 5000;
 
-// 404 handler
-app.use((req, res) => {
-    res.status(404).json({
-        success: false,
-        message: 'Route not found'
-    });
-});
+async function startServer() {
+    try {
+        await connectDB().then(conn=>console.log(`MongoDB Connected: ${conn.connection.host}`));
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    } catch (error) {
+        console.error(`Error: ${error.message}`);
+    }
+}
 
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
-
+startServer();

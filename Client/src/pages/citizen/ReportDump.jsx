@@ -28,6 +28,10 @@ export default function ReportDump() {
         try {
             const data = new FormData();
             data.append('address', formData.location);
+            if (formData.coordinates) {
+                data.append('latitude', formData.coordinates.lat);
+                data.append('longitude', formData.coordinates.lng);
+            }
             data.append('description', formData.description);
             if (imageFile) {
                 data.append('image', imageFile);
@@ -70,7 +74,31 @@ export default function ReportDump() {
                                 value={formData.location}
                                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                             />
-                            <button type="button" className="absolute right-2 top-2 text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 text-gray-600">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (navigator.geolocation) {
+                                        navigator.geolocation.getCurrentPosition(
+                                            (position) => {
+                                                const { latitude, longitude } = position.coords;
+                                                setFormData({
+                                                    ...formData,
+                                                    location: `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`,
+                                                    coordinates: { lat: latitude, lng: longitude }
+                                                });
+                                                addToast('Location fetched successfully', 'success');
+                                            },
+                                            (error) => {
+                                                console.error(error);
+                                                addToast('Unable to retrieve your location', 'error');
+                                            }
+                                        );
+                                    } else {
+                                        addToast('Geolocation is not supported by your browser', 'error');
+                                    }
+                                }}
+                                className="absolute right-2 top-2 text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 text-gray-600"
+                            >
                                 Use Current Location
                             </button>
                         </div>

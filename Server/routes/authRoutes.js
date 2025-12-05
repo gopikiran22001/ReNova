@@ -3,6 +3,7 @@ import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { protect } from '../middleware/authMiddleware.js';
+import upload from '../config/cloudinary.js';
 
 const router = express.Router();
 
@@ -190,10 +191,12 @@ router.get('/me', protect, async (req, res) => {
     }
 });
 
+
+
 // @desc    Update user details
 // @route   PUT /api/auth/updatedetails
 // @access  Private
-router.put('/updatedetails', protect, async (req, res) => {
+router.put('/updatedetails', protect, upload.single('avatar'), async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
 
@@ -209,6 +212,10 @@ router.put('/updatedetails', protect, async (req, res) => {
 
         if (req.body.address) {
             user.address = req.body.address;
+        }
+
+        if (req.file) {
+            user.avatarUrl = req.file.path;
         }
 
         const updatedUser = await user.save();

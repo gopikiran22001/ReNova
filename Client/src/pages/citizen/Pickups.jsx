@@ -73,6 +73,11 @@ export default function Pickups() {
                                         <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
                                         <span>{pickup.weight}</span>
                                     </div>
+                                    {pickup.imageUrl && (
+                                        <div className="mt-2">
+                                            <img src={pickup.imageUrl} alt="Pickup" className="h-16 w-16 object-cover rounded-md border border-gray-200" />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

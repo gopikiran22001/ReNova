@@ -45,6 +45,10 @@ export default function RequestPickup() {
             data.append('weight', formData.weight);
             data.append('date', formData.date);
             data.append('address', formData.location);
+            if (formData.coordinates) {
+                data.append('latitude', formData.coordinates.lat);
+                data.append('longitude', formData.coordinates.lng);
+            }
             if (imageFile) {
                 data.append('image', imageFile);
             }
@@ -115,6 +119,35 @@ export default function RequestPickup() {
                                 value={formData.location}
                                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                             />
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (navigator.geolocation) {
+                                        navigator.geolocation.getCurrentPosition(
+                                            (position) => {
+                                                const { latitude, longitude } = position.coords;
+                                                // Ideally we would reverse geocode here to get address string
+                                                // For now, we'll just set a placeholder and store coords
+                                                setFormData({
+                                                    ...formData,
+                                                    location: `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`,
+                                                    coordinates: { lat: latitude, lng: longitude }
+                                                });
+                                                addToast('Location fetched successfully', 'success');
+                                            },
+                                            (error) => {
+                                                console.error(error);
+                                                addToast('Unable to retrieve your location', 'error');
+                                            }
+                                        );
+                                    } else {
+                                        addToast('Geolocation is not supported by your browser', 'error');
+                                    }
+                                }}
+                                className="absolute right-2 top-2 text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 text-gray-600"
+                            >
+                                Use Current Location
+                            </button>
                         </div>
                     </div>
 

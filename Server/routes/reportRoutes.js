@@ -11,7 +11,7 @@ const router = express.Router();
 // @access  Private
 router.post('/', protect, upload.single('image'), async (req, res) => {
     try {
-        const { address, description } = req.body;
+        const { address, description, latitude, longitude } = req.body;
         const imageUrl = req.file ? req.file.path : null;
 
         if (!description || !address) {
@@ -24,7 +24,11 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
         const report = new Report({
             reporterId: req.user.id,
             location: {
-                address: address
+                address: address,
+                coordinates: {
+                    lat: latitude,
+                    lng: longitude
+                }
             },
             description,
             imageUrl

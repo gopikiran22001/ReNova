@@ -15,6 +15,9 @@ export default function Profile() {
     });
     const [loading, setLoading] = useState(true);
 
+    const [avatar, setAvatar] = useState(null);
+    const [avatarFile, setAvatarFile] = useState(null);
+
     useEffect(() => {
         const fetchUser = async () => {
             try {
@@ -24,10 +27,15 @@ export default function Profile() {
                     setFormData({
                         name: user.name,
                         email: user.email,
-                        phone: user.phone || '',
-                        address: user.address?.street ? `${user.address.street}, ${user.address.city}, ${user.address.zipCode}` : '',
+                        phone: user.mobile || '',
+                        address: typeof user.address === 'object' && user.address !== null
+                            ? `${user.address.street || ''} ${user.address.city || ''} ${user.address.zipCode || ''}`.trim()
+                            : user.address || '',
                         bio: 'Passionate about recycling and keeping our planet clean.'
                     });
+                    if (user.avatarUrl) {
+                        setAvatar(user.avatarUrl);
+                    }
                 }
             } catch (error) {
                 console.error('Error fetching profile:', error);
@@ -39,25 +47,41 @@ export default function Profile() {
         fetchUser();
     }, []);
 
+    const handleAvatarChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            setAvatar(URL.createObjectURL(e.target.files[0]));
+            setAvatarFile(e.target.files[0]);
+            setIsEditing(true); // Auto-enable editing when photo changes
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // We need an endpoint to update user profile. 
-            // Assuming PUT /auth/profile or similar exists or we create it.
-            // For now, I'll assume we might need to add it to authRoutes.
-            // Let's check authRoutes first.
-            // If not exists, I'll add it.
+            const data = new FormData();
+            data.append('name', formData.name);
+            data.append('mobile', formData.phone);
+            data.append('address', formData.address);
+            if (avatarFile) {
+                data.append('avatar', avatarFile);
+            }
 
-            // Parsing address string back to object is tricky without structured input.
-            // For now, let's just save name and phone.
-            await api.put('/auth/updatedetails', {
-                name: formData.name,
-                phone: formData.phone
-                // address update logic needed
+            const response = await api.put('/auth/updatedetails', data, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
             });
-            setIsEditing(false);
-            addToast('Profile updated successfully!', 'success');
+
+            if (response.data.success) {
+                setIsEditing(false);
+                addToast('Profile updated successfully!', 'success');
+                // Update local avatar with returned url if needed, or just keep the preview
+                if (response.data.data.user.avatarUrl) {
+                    setAvatar(response.data.data.user.avatarUrl);
+                }
+            }
         } catch (error) {
+            console.error(error);
             addToast('Failed to update profile', 'error');
         }
     };
@@ -72,13 +96,23 @@ export default function Profile() {
                 {/* Sidebar / Photo */}
                 <div className="md:col-span-1">
                     <div className="card p-6 text-center">
-                        <div className="relative inline-block mb-4">
+                        <div className="relative inline-block mb-4 group">
                             <div className="h-32 w-32 rounded-full bg-primary-100 flex items-center justify-center mx-auto overflow-hidden border-4 border-white shadow-lg">
-                                <User className="h-16 w-16 text-primary-400" />
+                                {avatar ? (
+                                    <img src={avatar} alt="Profile" className="h-full w-full object-cover" />
+                                ) : (
+                                    <User className="h-16 w-16 text-primary-400" />
+                                )}
                             </div>
-                            <button className="absolute bottom-0 right-0 p-2 bg-primary-600 text-white rounded-full hover:bg-primary-700 shadow-md transition-colors">
+                            <label className="absolute bottom-0 right-0 p-2 bg-primary-600 text-white rounded-full hover:bg-primary-700 shadow-md transition-colors cursor-pointer">
                                 <Camera className="h-4 w-4" />
-                            </button>
+                                <input
+                                    type="file"
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={handleAvatarChange}
+                                />
+                            </label>
                         </div>
                         <h2 className="text-xl font-bold text-gray-900">{formData.name}</h2>
                         <p className="text-gray-500 text-sm">Citizen</p>

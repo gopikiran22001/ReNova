@@ -90,6 +90,11 @@ export default function CollectorDashboard() {
                                         <Package className="h-4 w-4" />
                                         <span>{job.wasteType} - {job.weight}</span>
                                     </div>
+                                    {job.imageUrl && (
+                                        <div className="mt-2">
+                                            <img src={job.imageUrl} alt="Job" className="h-20 w-20 object-cover rounded-md border border-gray-200" />
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="flex items-center gap-3">
