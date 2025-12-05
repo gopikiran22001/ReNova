@@ -17,7 +17,7 @@ export default function CitizenDashboard() {
             try {
                 // Fetch pickups to calculate waste and find next pickup
                 const { data: pickupsResponse } = await api.get('/pickups');
-                const pickups = pickupsResponse.success ? pickupsResponse.data.items : [];
+                const pickups = pickupsResponse.success ? pickupsResponse.data.pickups : [];
 
                 // Calculate total waste (count completed pickups)
                 const completedPickups = pickups.filter(p => p.status === 'completed');

@@ -8,7 +8,6 @@ import pickupRoutes from './routes/pickupRoutes.js';
 import centreRoutes from './routes/centreRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
-import uploadRoutes from './routes/uploadRoutes.js';
 import cookieParser from 'cookie-parser';
 
 // Load env vars
@@ -34,8 +33,7 @@ app.use(cors({
 }));
 
 // Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json());
 app.use(cookieParser());
 
 // Routes
@@ -49,7 +47,6 @@ app.use('/api/pickups', pickupRoutes);
 app.use('/api/centres', centreRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/transactions', transactionRoutes);
-app.use('/api/upload', uploadRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

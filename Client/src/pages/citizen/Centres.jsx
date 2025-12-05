@@ -11,7 +11,7 @@ export default function Centres() {
             try {
                 const { data } = await api.get('/centres');
                 if (data.success) {
-                    setCentres(data.data.items || data.data || []);
+                    setCentres(data.data.centers || []);
                 } else {
                     console.error('Failed to fetch centres:', data.message);
                     setCentres([]);

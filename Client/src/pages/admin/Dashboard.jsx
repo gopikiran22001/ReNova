@@ -16,8 +16,8 @@ export default function AdminDashboard() {
             try {
                 // Fetch pickups
                 const { data: pickupsResponse } = await api.get('/pickups');
-                const pickups = pickupsResponse.success ? pickupsResponse.data.items : [];
-                
+                const pickups = pickupsResponse.success ? pickupsResponse.data.pickups : [];
+
                 const today = new Date().toISOString().split('T')[0];
                 const dailyPickups = pickups.filter(p => {
                     return p.date && p.date.startsWith(today);
@@ -25,12 +25,12 @@ export default function AdminDashboard() {
 
                 // Fetch reports
                 const { data: reportsResponse } = await api.get('/reports');
-                const reports = reportsResponse.success ? reportsResponse.data.items : [];
+                const reports = reportsResponse.success ? reportsResponse.data.reports : [];
                 const pendingReports = reports.filter(r => r.status === 'reported').length;
 
                 // Fetch users
                 const { data: usersResponse } = await api.get('/auth/users');
-                const users = usersResponse.success ? usersResponse.data.items : [];
+                const users = usersResponse.success ? usersResponse.data.users : [];
                 const activeCollectors = users.filter(u => u.role === 'collector').length;
 
                 setStats({

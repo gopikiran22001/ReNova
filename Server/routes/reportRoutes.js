@@ -20,7 +20,7 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
             });
         }
 
-        const report = await Report.create({
+        const report = new Report({
             reporterId: req.user.id,
             location: {
                 address: address
@@ -28,6 +28,8 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
             description,
             imageUrl
         });
+
+        await report.save();
 
         res.status(201).json({
             success: true,
@@ -47,33 +49,18 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
 // @access  Private
 router.get('/', protect, async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
+        let reports;
 
-        let query = {};
-        
         if (req.user.role === 'citizen') {
-            query = { reporterId: req.user.id };
+            reports = await Report.find({reporterId: req.user.id}).sort({ createdAt: -1 })
+        } else {
+            reports = await Report.find().sort({ createdAt: -1 })
         }
-        // Admin and collectors see all reports
-
-        const reports = await Report.find(query)
-            .populate('reporterId', 'name email')
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit);
-
-        const total = await Report.countDocuments(query);
-        const pages = Math.ceil(total / limit);
-
+        
         res.status(200).json({
             success: true,
             data: {
-                items: reports,
-                total,
-                page,
-                pages
+                reports: reports,
             }
         });
     } catch (error) {

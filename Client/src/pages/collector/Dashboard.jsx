@@ -13,7 +13,7 @@ export default function CollectorDashboard() {
         try {
             const { data } = await api.get('/pickups');
             if (data.success) {
-                setJobs(data.data.items || []);
+                setJobs(data.data.pickups || []);
             }
         } catch (error) {
             console.error('Error fetching jobs:', error);

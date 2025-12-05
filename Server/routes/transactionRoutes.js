@@ -38,12 +38,14 @@ router.post('/', protect, async (req, res) => {
             }
         }
 
-        const transaction = await Transaction.create({
+        const transaction = new  Transaction({
             userId: req.user.id,
             amount,
             type,
             description
         });
+
+        await transaction.save();
 
         // Update user points
         const user = await User.findById(req.user.id);
@@ -72,33 +74,13 @@ router.post('/', protect, async (req, res) => {
 // @access  Private
 router.get('/', protect, async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
-        const skip = (page - 1) * limit;
 
-        let query = {};
-        
-        if (req.user.role === 'citizen') {
-            query = { userId: req.user.id };
-        }
-        // Admin sees all transactions
-
-        const transactions = await Transaction.find(query)
-            .populate('userId', 'name email')
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit);
-
-        const total = await Transaction.countDocuments(query);
-        const pages = Math.ceil(total / limit);
+        const transactions = await Transaction.find({ userId: req.user.id }).sort({ createdAt: -1 });
 
         res.status(200).json({
             success: true,
             data: {
-                items: transactions,
-                total,
-                page,
-                pages
+                transactions: transactions,
             }
         });
     } catch (error) {

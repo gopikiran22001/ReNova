@@ -1,5 +1,5 @@
 import express from 'express';
-import bcrypt from 'bcryptjs';
+import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { protect } from '../middleware/authMiddleware.js';
@@ -38,19 +38,19 @@ router.post('/register', async (req, res) => {
         }
 
         // Hash password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        const hashedPassword = await bcryptjs.hash(password, 10);
 
         // Create user
-        const user = await User.create({
+        const user = new User({
             name,
             email,
             password: hashedPassword,
             role: role || 'citizen',
             address,
-            phone,
             mobile
         });
+
+        await user.save();
 
         const token = generateToken(user._id);
 
@@ -69,7 +69,6 @@ router.post('/register', async (req, res) => {
                     name: user.name,
                     email: user.email,
                     role: user.role,
-                    phone: user.phone,
                     mobile: user.mobile,
                     avatarUrl: user.avatarUrl,
                     points: user.points
@@ -102,7 +101,14 @@ router.post('/login', async (req, res) => {
         // Check for user email
         const user = await User.findOne({ email });
 
-        if (user && (await bcrypt.compare(password, user.password))) {
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid Email'
+            });
+        }
+
+        if (user && (await bcryptjs.compare(password, user.password))) {
             const token = generateToken(user._id);
 
             res.cookie('jwt', token, {
@@ -120,7 +126,6 @@ router.post('/login', async (req, res) => {
                         name: user.name,
                         email: user.email,
                         role: user.role,
-                        phone: user.phone,
                         mobile: user.mobile,
                         avatarUrl: user.avatarUrl,
                         points: user.points
@@ -130,7 +135,7 @@ router.post('/login', async (req, res) => {
         } else {
             res.status(401).json({
                 success: false,
-                message: 'Invalid credentials'
+                message: 'Invalid Password'
             });
         }
     } catch (error) {
@@ -169,7 +174,6 @@ router.get('/me', protect, async (req, res) => {
                     name: req.user.name,
                     email: req.user.email,
                     role: req.user.role,
-                    phone: req.user.phone,
                     mobile: req.user.mobile,
                     avatarUrl: req.user.avatarUrl,
                     points: req.user.points,
@@ -201,7 +205,6 @@ router.put('/updatedetails', protect, async (req, res) => {
         }
 
         user.name = req.body.name || user.name;
-        user.phone = req.body.phone || user.phone;
         user.mobile = req.body.mobile || user.mobile;
 
         if (req.body.address) {
@@ -218,7 +221,6 @@ router.put('/updatedetails', protect, async (req, res) => {
                     name: updatedUser.name,
                     email: updatedUser.email,
                     role: updatedUser.role,
-                    phone: updatedUser.phone,
                     mobile: updatedUser.mobile,
                     avatarUrl: updatedUser.avatarUrl,
                     address: updatedUser.address,
@@ -230,6 +232,48 @@ router.put('/updatedetails', protect, async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error updating user details',
+            error: error.message
+        });
+    }
+});
+
+router.get('/user/:id', protect, async (req, res) => {
+    try {
+        if (req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Not authorized as an admin'
+            });
+        }
+
+        const user = await User.findById(req.params.id);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: {
+                user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    mobile: user.mobile,
+                    avatarUrl: user.avatarUrl,
+                    points: user.points,
+                    address: user.address
+                }
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching user data',
             error: error.message
         });
     }
@@ -247,25 +291,12 @@ router.get('/users', protect, async (req, res) => {
             });
         }
 
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
-        const skip = (page - 1) * limit;
-
-        const users = await User.find({}).select('-password')
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit);
-
-        const total = await User.countDocuments();
-        const pages = Math.ceil(total / limit);
+        const users = await User.find().select('-password').sort({ createdAt: -1 });
 
         res.json({
             success: true,
             data: {
-                items: users,
-                total,
-                page,
-                pages
+                users: users,
             }
         });
     } catch (error) {

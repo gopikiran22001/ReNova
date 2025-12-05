@@ -12,7 +12,7 @@ export default function AdminPickups() {
         try {
             const { data } = await api.get('/pickups');
             if (data.success) {
-                setPickups(data.data.items || []);
+                setPickups(data.data.pickups || []);
             }
         } catch (error) {
             console.error('Error fetching pickups:', error);

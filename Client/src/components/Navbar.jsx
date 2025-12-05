@@ -19,6 +19,21 @@ export default function Navbar() {
         navigate('/login');
     };
 
+    const NavLink = ({ to, children }) => {
+        const isActive = location.pathname === to;
+        return (
+            <Link
+                to={to}
+                className={`text-sm font-medium transition-colors ${isActive
+                        ? 'text-primary-600 font-semibold'
+                        : 'text-gray-600 hover:text-primary-600'
+                    }`}
+            >
+                {children}
+            </Link>
+        );
+    };
+
     return (
         <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 backdrop-blur-lg bg-white/80">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -36,30 +51,30 @@ export default function Navbar() {
 
                     {/* Desktop Menu */}
                     <div className="hidden md:flex items-center gap-6">
-                        <Link to="/awareness" className="text-gray-600 hover:text-primary-600 font-medium">Awareness</Link>
+                        <NavLink to="/awareness">Awareness</NavLink>
 
                         {isCitizen && (
                             <>
-                                <Link to="/citizen/dashboard" className="text-gray-600 hover:text-primary-600 font-medium">Dashboard</Link>
-                                <Link to="/citizen/request-pickup" className="text-gray-600 hover:text-primary-600 font-medium">Request Pickup</Link>
-                                <Link to="/citizen/pickups" className="text-gray-600 hover:text-primary-600 font-medium">My Pickups</Link>
-                                <Link to="/citizen/centres" className="text-gray-600 hover:text-primary-600 font-medium">Centres</Link>
-                                <Link to="/citizen/points" className="text-gray-600 hover:text-primary-600 font-medium">Points</Link>
+                                <NavLink to="/citizen/dashboard">Dashboard</NavLink>
+                                <NavLink to="/citizen/request-pickup">Request Pickup</NavLink>
+                                <NavLink to="/citizen/pickups">My Pickups</NavLink>
+                                <NavLink to="/citizen/centres">Centres</NavLink>
+                                <NavLink to="/citizen/points">Points</NavLink>
                             </>
                         )}
 
                         {isCollector && (
                             <>
-                                <Link to="/collector/dashboard" className="text-gray-600 hover:text-primary-600 font-medium">Dashboard</Link>
+                                <NavLink to="/collector/dashboard">Dashboard</NavLink>
                             </>
                         )}
 
                         {isAdmin && (
                             <>
-                                <Link to="/admin/dashboard" className="text-gray-600 hover:text-primary-600 font-medium">Dashboard</Link>
-                                <Link to="/admin/pickups" className="text-gray-600 hover:text-primary-600 font-medium">Pickups</Link>
-                                <Link to="/admin/centres" className="text-gray-600 hover:text-primary-600 font-medium">Centres</Link>
-                                <Link to="/admin/reports" className="text-gray-600 hover:text-primary-600 font-medium">Reports</Link>
+                                <NavLink to="/admin/dashboard">Dashboard</NavLink>
+                                <NavLink to="/admin/pickups">Pickups</NavLink>
+                                <NavLink to="/admin/centres">Centres</NavLink>
+                                <NavLink to="/admin/reports">Reports</NavLink>
                             </>
                         )}
 
@@ -67,12 +82,19 @@ export default function Navbar() {
 
                         {!user ? (
                             <div className="flex items-center gap-3">
-                                <Link to="/login" className="text-gray-600 hover:text-primary-600 font-medium">Sign In</Link>
+                                <NavLink to="/login">Sign In</NavLink>
                                 <Link to="/register" className="btn btn-primary py-1.5 px-4 text-sm">Get Started</Link>
                             </div>
                         ) : (
                             <div className="flex items-center gap-3">
-                                <Link to="/profile" className="p-2 text-gray-500 hover:text-primary-600 hover:bg-gray-100 rounded-full transition-colors" title="Profile">
+                                <Link
+                                    to="/profile"
+                                    className={`p-2 rounded-full transition-colors ${location.pathname === '/profile'
+                                            ? 'text-primary-600 bg-primary-50'
+                                            : 'text-gray-500 hover:text-primary-600 hover:bg-gray-100'
+                                        }`}
+                                    title="Profile"
+                                >
                                     <User className="h-5 w-5" />
                                 </Link>
                                 <button onClick={handleLogout} className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors" title="Log Out">

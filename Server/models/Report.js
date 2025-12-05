@@ -23,11 +23,9 @@ const reportSchema = new mongoose.Schema({
         type: String,
         enum: ['reported', 'investigating', 'resolved', 'dismissed'],
         default: 'reported'
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
     }
+},{
+    timestamps:true,
 });
 
 export default mongoose.model('Report', reportSchema);

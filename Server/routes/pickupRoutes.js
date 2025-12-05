@@ -20,7 +20,7 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
             });
         }
 
-        const pickup = await Pickup.create({
+        const pickup = new Pickup({
             userId: req.user.id,
             wasteType,
             weight,
@@ -30,6 +30,8 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
             },
             imageUrl
         });
+
+        await pickup.save();
 
         res.status(201).json({
             success: true,
@@ -49,41 +51,26 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
 // @access  Private
 router.get('/', protect, async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
 
-        let query = {};
+        let pickups;
         
         if (req.user.role === 'citizen') {
-            query = { userId: req.user.id };
+            pickups = await Pickup.find({ userId: req.user.id }).sort({ createdAt: -1 });
         } else if (req.user.role === 'collector') {
-            query = {
+            pickups = await Pickup.find({
                 $or: [
                     { status: 'pending' },
                     { collectorId: req.user.id }
                 ]
-            };
+            }).sort({ createdAt: -1 });
+        } else {
+            pickups = await Pickup.find().sort({ createdAt: -1 });
         }
-        // Admin sees all (no additional query filter)
-
-        const pickups = await Pickup.find(query)
-            .populate('userId', 'name email phone')
-            .populate('collectorId', 'name email phone')
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit);
-
-        const total = await Pickup.countDocuments(query);
-        const pages = Math.ceil(total / limit);
 
         res.status(200).json({
             success: true,
             data: {
-                items: pickups,
-                total,
-                page,
-                pages
+                pickups: pickups,
             }
         });
     } catch (error) {
@@ -100,9 +87,7 @@ router.get('/', protect, async (req, res) => {
 // @access  Private
 router.get('/:id', protect, async (req, res) => {
     try {
-        const pickup = await Pickup.findById(req.params.id)
-            .populate('userId', 'name email phone')
-            .populate('collectorId', 'name email phone');
+        const pickup = await Pickup.findById(req.params.id);
 
         if (!pickup) {
             return res.status(404).json({ 

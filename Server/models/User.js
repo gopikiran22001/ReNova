@@ -31,19 +31,14 @@ const userSchema = new mongoose.Schema({
         city: String,
         zipCode: String
     },
-    phone: {
-        type: String
-    },
     mobile: {
         type: String
     },
     avatarUrl: {
         type: String
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
     }
+},{
+    timestamps:true,
 });
 
 export default mongoose.model('User', userSchema);

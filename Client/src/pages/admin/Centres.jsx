@@ -14,7 +14,7 @@ export default function AdminCentres() {
         try {
             const { data } = await api.get('/centres');
             if (data.success) {
-                setCentres(data.data.items || []);
+                setCentres(data.data.centers || []);
             }
         } catch (error) {
             console.error('Error fetching centres:', error);

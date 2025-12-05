@@ -11,7 +11,7 @@ export default function Pickups() {
             try {
                 const { data } = await api.get('/pickups');
                 if (data.success) {
-                    setPickups(data.data.items || []);
+                    setPickups(data.data.pickups || []);
                 } else {
                     console.error('Failed to fetch pickups:', data.message);
                     setPickups([]);

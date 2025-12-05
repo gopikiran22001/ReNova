@@ -26,13 +26,15 @@ router.post('/', protect, async (req, res) => {
             });
         }
 
-        const centre = await Centre.create({
+        const centre = new Centre({
             name,
             location,
             capacity,
             acceptedTypes,
             openingHours
         });
+        
+        await centre.save();
 
         res.status(201).json({
             success: true,
@@ -52,25 +54,13 @@ router.post('/', protect, async (req, res) => {
 // @access  Public
 router.get('/', async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
-        const skip = (page - 1) * limit;
 
-        const centres = await Centre.find()
-            .sort({ name: 1 })
-            .skip(skip)
-            .limit(limit);
-
-        const total = await Centre.countDocuments();
-        const pages = Math.ceil(total / limit);
+        const centres = await Centre.find().sort({ name: 1 })
 
         res.status(200).json({
             success: true,
             data: {
-                items: centres,
-                total,
-                page,
-                pages
+                centers: centres,
             }
         });
     } catch (error) {

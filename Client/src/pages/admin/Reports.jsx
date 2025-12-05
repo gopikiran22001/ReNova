@@ -13,7 +13,7 @@ export default function AdminReports() {
         const fetchData = async () => {
             try {
                 const { data: pickupsResponse } = await api.get('/pickups');
-                const pickups = pickupsResponse.success ? pickupsResponse.data.items : [];
+                const pickups = pickupsResponse.success ? pickupsResponse.data.pickups : [];
 
                 // Calculate waste by type
                 const wasteByType = pickups.reduce((acc, p) => {

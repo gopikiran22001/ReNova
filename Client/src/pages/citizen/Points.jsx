@@ -20,7 +20,7 @@ export default function Points() {
 
             const { data: transResponse } = await api.get('/transactions');
             if (transResponse.success) {
-                setTransactions(transResponse.data.items || []);
+                setTransactions(transResponse.data.transactions || []);
             }
         } catch (error) {
             console.error('Error fetching points data:', error);
