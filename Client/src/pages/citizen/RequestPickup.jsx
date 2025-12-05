@@ -108,14 +108,12 @@ export default function RequestPickup() {
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Location</label>
                         <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <MapPin className="h-5 w-5 text-gray-400" />
-                            </div>
+                            <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                             <input
                                 type="text"
+                                placeholder="Enter address or landmark"
+                                className="input-field pl-10"
                                 required
-                                className="input pl-10 w-full"
-                                placeholder="Enter pickup address"
                                 value={formData.location}
                                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                             />
@@ -126,8 +124,6 @@ export default function RequestPickup() {
                                         navigator.geolocation.getCurrentPosition(
                                             (position) => {
                                                 const { latitude, longitude } = position.coords;
-                                                // Ideally we would reverse geocode here to get address string
-                                                // For now, we'll just set a placeholder and store coords
                                                 setFormData({
                                                     ...formData,
                                                     location: `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`,
