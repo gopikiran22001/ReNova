@@ -48,7 +48,7 @@ export default function AdminPickups() {
             <h1 className="text-2xl font-bold text-gray-900 mb-6">Manage Pickups</h1>
 
             <div className="card overflow-hidden">
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto no-scrollbar">
                     <table className="w-full text-left text-sm text-gray-600">
                         <thead className="bg-gray-50 text-gray-900 font-medium border-b border-gray-100">
                             <tr>

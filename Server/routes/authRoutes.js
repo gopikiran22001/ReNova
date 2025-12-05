@@ -1,9 +1,9 @@
-import express from 'express';
 import bcryptjs from 'bcryptjs';
+import express from 'express';
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
-import { protect } from '../middleware/authMiddleware.js';
 import upload from '../config/cloudinary.js';
+import { protect } from '../middleware/authMiddleware.js';
+import User from '../models/User.js';
 
 const router = express.Router();
 

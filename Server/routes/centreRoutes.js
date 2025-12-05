@@ -1,6 +1,6 @@
 import express from 'express';
-import Centre from '../models/Centre.js';
 import { protect } from '../middleware/authMiddleware.js';
+import Centre from '../models/Centre.js';
 
 const router = express.Router();
 

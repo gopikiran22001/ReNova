@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../api/axios';
 import { Download, FileText, PieChart, BarChart3 } from 'lucide-react';
+import ListboxSelect from '../../components/ListboxSelect';
 
 export default function AdminReports() {
     const [stats, setStats] = useState({
@@ -103,7 +104,7 @@ export default function AdminReports() {
 
             <h2 className="text-lg font-bold text-gray-900 mt-8 mb-4">Recent Reports</h2>
             <div className="card overflow-hidden mb-8">
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto no-scrollbar">
                     <table className="w-full text-left text-sm text-gray-600">
                         <thead className="bg-gray-50 text-gray-900 font-medium border-b border-gray-100">
                             <tr>
@@ -112,6 +113,7 @@ export default function AdminReports() {
                                 <th className="px-6 py-4">Description</th>
                                 <th className="px-6 py-4">Status</th>
                                 <th className="px-6 py-4">Date</th>
+                                <th className="px-6 py-4">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -128,13 +130,38 @@ export default function AdminReports() {
                                     <td className="px-6 py-4 max-w-xs truncate" title={report.description}>{report.description}</td>
                                     <td className="px-6 py-4">
                                         <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${report.status === 'resolved' ? 'bg-green-100 text-green-700' :
-                                                report.status === 'investigating' ? 'bg-blue-100 text-blue-700' :
-                                                    'bg-yellow-100 text-yellow-700'
+                                            report.status === 'investigating' ? 'bg-blue-100 text-blue-700' :
+                                                'bg-yellow-100 text-yellow-700'
                                             }`}>
                                             {report.status}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4">{new Date(report.createdAt).toLocaleDateString()}</td>
+                                    <td className="px-6 py-4">
+                                        {report.status !== 'resolved' && (
+                                            <div className="w-40">
+                                                <ListboxSelect
+                                                    value={report.status}
+                                                    onChange={async (newStatus) => {
+                                                        try {
+                                                            await api.put(`/reports/${report._id}/status`, { status: newStatus });
+                                                            // Refresh data locally
+                                                            setReports(prev => prev.map(p =>
+                                                                p._id === report._id ? { ...p, status: newStatus } : p
+                                                            ));
+                                                        } catch (error) {
+                                                            console.error('Failed to update status', error);
+                                                        }
+                                                    }}
+                                                    options={[
+                                                        { value: 'pending', label: 'Pending' },
+                                                        { value: 'investigating', label: 'Investigating' },
+                                                        { value: 'resolved', label: 'Resolved' }
+                                                    ]}
+                                                />
+                                            </div>
+                                        )}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
