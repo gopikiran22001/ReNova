@@ -18,7 +18,7 @@ const generateToken = (id) => {
 // @access  Public
 router.post('/register', async (req, res) => {
     try {
-        const { name, email, password, role, address, phone, mobile } = req.body;
+        const { name, email, password, role, address, mobile } = req.body;
 
         if (!name || !email || !password) {
             return res.status(400).json({

@@ -37,8 +37,8 @@ const userSchema = new mongoose.Schema({
     avatarUrl: {
         type: String
     }
-},{
-    timestamps:true,
+}, {
+    timestamps: true,
 });
 
 export default mongoose.model('User', userSchema);

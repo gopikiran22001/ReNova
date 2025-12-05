@@ -23,8 +23,8 @@ const transactionSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     }
-},{
-    timestamps:true,
+}, {
+    timestamps: true,
 });
 
 export default mongoose.model('Transaction', transactionSchema);

@@ -24,8 +24,8 @@ const reportSchema = new mongoose.Schema({
         enum: ['reported', 'investigating', 'resolved', 'dismissed'],
         default: 'reported'
     }
-},{
-    timestamps:true,
+}, {
+    timestamps: true,
 });
 
 export default mongoose.model('Report', reportSchema);

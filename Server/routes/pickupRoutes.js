@@ -1,5 +1,6 @@
 import express from 'express';
 import Pickup from '../models/Pickup.js';
+import User from '../models/User.js';
 import { protect } from '../middleware/authMiddleware.js';
 import upload from '../config/cloudinary.js';
 
@@ -14,9 +15,9 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
         const imageUrl = req.file ? req.file.path : null;
 
         if (!wasteType || !weight || !date || !address) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: 'Please provide all required fields: wasteType, weight, date, address' 
+                message: 'Please provide all required fields: wasteType, weight, date, address'
             });
         }
 
@@ -53,7 +54,7 @@ router.get('/', protect, async (req, res) => {
     try {
 
         let pickups;
-        
+
         if (req.user.role === 'citizen') {
             pickups = await Pickup.find({ userId: req.user.id }).sort({ createdAt: -1 });
         } else if (req.user.role === 'collector') {
@@ -90,17 +91,17 @@ router.get('/:id', protect, async (req, res) => {
         const pickup = await Pickup.findById(req.params.id);
 
         if (!pickup) {
-            return res.status(404).json({ 
+            return res.status(404).json({
                 success: false,
-                message: 'Pickup not found' 
+                message: 'Pickup not found'
             });
         }
 
         // Check permissions
         if (req.user.role === 'citizen' && pickup.userId._id.toString() !== req.user.id) {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 success: false,
-                message: 'Not authorized to view this pickup' 
+                message: 'Not authorized to view this pickup'
             });
         }
 
@@ -125,17 +126,17 @@ router.put('/:id/status', protect, async (req, res) => {
         const pickup = await Pickup.findById(req.params.id);
 
         if (!pickup) {
-            return res.status(404).json({ 
+            return res.status(404).json({
                 success: false,
-                message: 'Pickup not found' 
+                message: 'Pickup not found'
             });
         }
 
         // Check permissions
         if (req.user.role === 'citizen') {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 success: false,
-                message: 'Not authorized to update pickup status' 
+                message: 'Not authorized to update pickup status'
             });
         }
 
@@ -150,6 +151,13 @@ router.put('/:id/status', protect, async (req, res) => {
 
         if (status === 'assigned' && !pickup.collectorId) {
             pickup.collectorId = req.user.id;
+        }
+
+        if (status === 'completed') {
+            const userId = pickup.userId;
+            const user = await User.findById(userId);
+            user.points += 10;
+            await user.save();
         }
 
         pickup.status = status;

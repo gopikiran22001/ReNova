@@ -1,5 +1,6 @@
 import express from 'express';
 import Report from '../models/Report.js';
+import User from '../models/User.js';
 import { protect } from '../middleware/authMiddleware.js';
 import upload from '../config/cloudinary.js';
 
@@ -14,9 +15,9 @@ router.post('/', protect, upload.single('image'), async (req, res) => {
         const imageUrl = req.file ? req.file.path : null;
 
         if (!description || !address) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: 'Please provide description and location' 
+                message: 'Please provide description and location'
             });
         }
 
@@ -52,11 +53,11 @@ router.get('/', protect, async (req, res) => {
         let reports;
 
         if (req.user.role === 'citizen') {
-            reports = await Report.find({reporterId: req.user.id}).sort({ createdAt: -1 })
+            reports = await Report.find({ reporterId: req.user.id }).sort({ createdAt: -1 })
         } else {
             reports = await Report.find().sort({ createdAt: -1 })
         }
-        
+
         res.status(200).json({
             success: true,
             data: {
@@ -78,18 +79,18 @@ router.get('/', protect, async (req, res) => {
 router.put('/:id/status', protect, async (req, res) => {
     try {
         if (req.user.role === 'citizen') {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 success: false,
-                message: 'Not authorized to update report status' 
+                message: 'Not authorized to update report status'
             });
         }
 
         const report = await Report.findById(req.params.id);
 
         if (!report) {
-            return res.status(404).json({ 
+            return res.status(404).json({
                 success: false,
-                message: 'Report not found' 
+                message: 'Report not found'
             });
         }
 
@@ -103,6 +104,12 @@ router.put('/:id/status', protect, async (req, res) => {
         }
 
         report.status = status;
+        if (status === 'resolved') {
+            const userId = report.reporterId;
+            const user = await User.findById(userId);
+            user.points += 15;
+            await user.save();
+        }
         await report.save();
 
         res.status(200).json({

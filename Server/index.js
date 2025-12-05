@@ -18,12 +18,6 @@ connectDB();
 
 const app = express();
 
-// Security middleware
-app.use(helmet({
-    crossOriginEmbedderPolicy: false,
-    contentSecurityPolicy: false
-}));
-
 // CORS middleware
 app.use(cors({
     origin: process.env.NODE_ENV === 'production'
@@ -42,11 +36,11 @@ app.get('/', (req, res) => {
 });
 
 // Define Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/pickups', pickupRoutes);
-app.use('/api/centres', centreRoutes);
-app.use('/api/reports', reportRoutes);
-app.use('/api/transactions', transactionRoutes);
+app.use('/auth', authRoutes);
+app.use('/pickups', pickupRoutes);
+app.use('/centres', centreRoutes);
+app.use('/reports', reportRoutes);
+app.use('/transactions', transactionRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

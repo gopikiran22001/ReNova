@@ -32,8 +32,8 @@ const centreSchema = new mongoose.Schema({
         enum: ['active', 'full', 'maintenance'],
         default: 'active'
     }
-},{
-    timestamps:true,
+}, {
+    timestamps: true,
 });
 
 export default mongoose.model('Centre', centreSchema);

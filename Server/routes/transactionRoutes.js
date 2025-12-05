@@ -13,9 +13,9 @@ router.post('/', protect, async (req, res) => {
         const { amount, type, description } = req.body;
 
         if (!amount || !type || !description) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: 'Please provide amount, type, and description' 
+                message: 'Please provide amount, type, and description'
             });
         }
 
@@ -38,7 +38,7 @@ router.post('/', protect, async (req, res) => {
             }
         }
 
-        const transaction = new  Transaction({
+        const transaction = new Transaction({
             userId: req.user.id,
             amount,
             type,

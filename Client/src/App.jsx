@@ -37,6 +37,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
+          <Route path="home" element={<Home />} />
           <Route path="awareness" element={<Awareness />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />

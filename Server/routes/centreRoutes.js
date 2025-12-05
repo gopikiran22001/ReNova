@@ -11,18 +11,18 @@ router.post('/', protect, async (req, res) => {
     try {
         // Check if user is admin
         if (req.user.role !== 'admin') {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 success: false,
-                message: 'Not authorized as an admin' 
+                message: 'Not authorized as an admin'
             });
         }
 
         const { name, location, capacity, acceptedTypes, openingHours } = req.body;
 
         if (!name || !capacity) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: 'Please provide name and capacity' 
+                message: 'Please provide name and capacity'
             });
         }
 
@@ -33,7 +33,7 @@ router.post('/', protect, async (req, res) => {
             acceptedTypes,
             openingHours
         });
-        
+
         await centre.save();
 
         res.status(201).json({
@@ -78,18 +78,18 @@ router.get('/', async (req, res) => {
 router.put('/:id', protect, async (req, res) => {
     try {
         if (req.user.role !== 'admin') {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 success: false,
-                message: 'Not authorized as an admin' 
+                message: 'Not authorized as an admin'
             });
         }
 
         const centre = await Centre.findById(req.params.id);
 
         if (!centre) {
-            return res.status(404).json({ 
+            return res.status(404).json({
                 success: false,
-                message: 'Centre not found' 
+                message: 'Centre not found'
             });
         }
 
