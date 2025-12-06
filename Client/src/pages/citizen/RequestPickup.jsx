@@ -23,6 +23,7 @@ export default function RequestPickup() {
 
     const [imageFile, setImageFile] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [locationLoading, setLocationLoading] = useState(false);
 
     const handleImageChange = (e) => {
         if (e.target.files && e.target.files[0]) {
@@ -99,7 +100,16 @@ export default function RequestPickup() {
                         <DatePicker
                             label="Preferred Date"
                             value={formData.date ? new Date(formData.date) : null}
-                            onChange={(date) => setFormData({ ...formData, date: date ? date.toISOString().split('T')[0] : '' })}
+                            onChange={(date) => {
+                                if (date) {
+                                    // Adjust for timezone offset to ensure the date string represents the selected local date
+                                    const offset = date.getTimezoneOffset() * 60000;
+                                    const localISOTime = (new Date(date.getTime() - offset)).toISOString().slice(0, 10);
+                                    setFormData({ ...formData, date: localISOTime });
+                                } else {
+                                    setFormData({ ...formData, date: '' });
+                                }
+                            }}
                             min={new Date()}
                             leftIcon={<Calendar className="h-5 w-5 text-gray-400" />}
                         />
@@ -119,30 +129,47 @@ export default function RequestPickup() {
                             />
                             <button
                                 type="button"
+                                disabled={locationLoading}
                                 onClick={() => {
                                     if (navigator.geolocation) {
+                                        setLocationLoading(true);
                                         navigator.geolocation.getCurrentPosition(
-                                            (position) => {
+                                            async (position) => {
                                                 const { latitude, longitude } = position.coords;
-                                                setFormData({
-                                                    ...formData,
-                                                    location: `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`,
-                                                    coordinates: { lat: latitude, lng: longitude }
-                                                });
-                                                addToast('Location fetched successfully', 'success');
+                                                try {
+                                                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                                                    const data = await response.json();
+                                                    setFormData({
+                                                        ...formData,
+                                                        location: data.display_name || `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`,
+                                                        coordinates: { lat: latitude, lng: longitude }
+                                                    });
+                                                    addToast('Location fetched successfully', 'success');
+                                                } catch (error) {
+                                                    console.error('Error fetching address:', error);
+                                                    setFormData({
+                                                        ...formData,
+                                                        location: `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`,
+                                                        coordinates: { lat: latitude, lng: longitude }
+                                                    });
+                                                    addToast('Location fetched, but address lookup failed', 'warning');
+                                                } finally {
+                                                    setLocationLoading(false);
+                                                }
                                             },
                                             (error) => {
                                                 console.error(error);
                                                 addToast('Unable to retrieve your location', 'error');
+                                                setLocationLoading(false);
                                             }
                                         );
                                     } else {
                                         addToast('Geolocation is not supported by your browser', 'error');
                                     }
                                 }}
-                                className="absolute right-2 top-2 text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 text-gray-600"
+                                className="absolute right-2 top-2 text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 text-gray-600 disabled:opacity-50"
                             >
-                                Use Current Location
+                                {locationLoading ? 'Fetching...' : 'Use Current Location'}
                             </button>
                         </div>
                     </div>
@@ -179,8 +206,12 @@ export default function RequestPickup() {
                     </div>
 
                     <div className="pt-4">
-                        <button type="submit" className="btn btn-primary w-full py-3 text-lg">
-                            Confirm Pickup Request
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className={`btn btn-primary w-full py-3 text-lg ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        >
+                            {loading ? 'Submitting...' : 'Confirm Pickup Request'}
                         </button>
                     </div>
                 </form>

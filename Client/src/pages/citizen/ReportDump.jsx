@@ -7,6 +7,7 @@ export default function ReportDump() {
     const { addToast } = useToast();
     const [image, setImage] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [locationLoading, setLocationLoading] = useState(false);
 
     const [imageFile, setImageFile] = useState(null);
     const [formData, setFormData] = useState({
@@ -76,30 +77,47 @@ export default function ReportDump() {
                             />
                             <button
                                 type="button"
+                                disabled={locationLoading}
                                 onClick={() => {
                                     if (navigator.geolocation) {
+                                        setLocationLoading(true);
                                         navigator.geolocation.getCurrentPosition(
-                                            (position) => {
+                                            async (position) => {
                                                 const { latitude, longitude } = position.coords;
-                                                setFormData({
-                                                    ...formData,
-                                                    location: `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`,
-                                                    coordinates: { lat: latitude, lng: longitude }
-                                                });
-                                                addToast('Location fetched successfully', 'success');
+                                                try {
+                                                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                                                    const data = await response.json();
+                                                    setFormData({
+                                                        ...formData,
+                                                        location: data.display_name || `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`,
+                                                        coordinates: { lat: latitude, lng: longitude }
+                                                    });
+                                                    addToast('Location fetched successfully', 'success');
+                                                } catch (error) {
+                                                    console.error('Error fetching address:', error);
+                                                    setFormData({
+                                                        ...formData,
+                                                        location: `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`,
+                                                        coordinates: { lat: latitude, lng: longitude }
+                                                    });
+                                                    addToast('Location fetched, but address lookup failed', 'warning');
+                                                } finally {
+                                                    setLocationLoading(false);
+                                                }
                                             },
                                             (error) => {
                                                 console.error(error);
                                                 addToast('Unable to retrieve your location', 'error');
+                                                setLocationLoading(false);
                                             }
                                         );
                                     } else {
                                         addToast('Geolocation is not supported by your browser', 'error');
                                     }
                                 }}
-                                className="absolute right-2 top-2 text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 text-gray-600"
+                                className="absolute right-2 top-2 text-xs bg-gray-100 px-2 py-1 rounded hover:bg-gray-200 text-gray-600 disabled:opacity-50"
                             >
-                                Use Current Location
+                                {locationLoading ? 'Fetching...' : 'Use Current Location'}
                             </button>
                         </div>
                     </div>
