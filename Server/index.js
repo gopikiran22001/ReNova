@@ -30,6 +30,11 @@ app.get('/', (req, res) => {
     res.send('API is running...');
 });
 
+app.get('/health',(req,res) => {
+    console.log('Health API');
+    res.status(200).send('Server Running');
+})
+
 // Define Routes
 app.use('/auth', authRoutes);
 app.use('/pickups', pickupRoutes);
